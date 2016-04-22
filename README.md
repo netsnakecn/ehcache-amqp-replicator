@@ -1,0 +1,1 @@
+# ehcache-amqp-replicator
