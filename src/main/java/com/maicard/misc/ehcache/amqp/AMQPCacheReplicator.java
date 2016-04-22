@@ -55,12 +55,11 @@ public class AMQPCacheReplicator  implements CacheReplicator {
 	                              boolean replicateUpdatesViaCopy, boolean replicateRemovals,
 	                              boolean replicateAsync, long asynchronousReplicationInterval) {
 
-	        if (LOG.isLoggable(Level.FINEST)) {
-	            LOG.finest("JMSCacheReplicator constructor ( replicatePuts = "
+	            LOG.fine("JMSCacheReplicator constructor ( replicatePuts = "
 	                    + replicatePuts + ", replicateUpdates = " + replicateUpdates + ", " +
 	                    "replicateUpdatesViaCopy = " + replicateUpdatesViaCopy + ", replicateRemovals = "
 	                    + replicateRemovals + ", replicateAsync = " + replicateAsync + " ) called");
-	        }
+	        
 
 	        replicationQueue = new LinkedList<AsyncAMQPEventMessage>();
 

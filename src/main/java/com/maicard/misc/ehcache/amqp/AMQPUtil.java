@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 public final class AMQPUtil {
 
 
+    public static final String QUEUE_NAME = "amqpQueueName";
 
 	    /***/
 	    public static final String EXCHANGE_NAME = "amqpExchangeName";
@@ -44,10 +45,18 @@ public final class AMQPUtil {
 
 	    /***/
 	    public static final int MAX_PRIORITY = 9;
+	    
+	    public static final String ACTION_PROPERTY = "action";
+
+	    public static final String CACHE_NAME_PROPERTY = "cacheName";
+
+	    public static final String KEY_PROPERTY = "key";
 
 	    /***/
 	    public static final String CACHE_MANAGER_UID = "cacheManagerUniqueId";
 
+	    public static final int CONSUMBER_QUERY_INTERVAL = 5;
+	    
 
 	    private static final Logger LOG = Logger.getLogger(AMQPUtil.class.getName());
 
@@ -104,49 +113,34 @@ public final class AMQPUtil {
 	        return System.identityHashCode(cacheManager);
 	    }
 	    
-	    
-	    public static void connectionTest(){
-	    	String host = "124.133.240.120";
-	    	String port = "5672";
-	    	String username = "mq";
-	    	String password = "vectAO";
-	    	String exchangeName = "chaoka";
-	    	
-	         String message = "Hello World!";  
-	         
-	         
-			try {
+	    public static Channel createChannel(String host, int port, String username, String password, String exchangeName, String queueName){
+	    	Channel channel = null;
+			Connection  connection = null;
 
-				ConnectionFactory		connectionFactory = new ConnectionFactory();
-				connectionFactory.setHost(host);
-				connectionFactory.setPort(Integer.parseInt(port));
-				connectionFactory.setUsername(username);
-				connectionFactory.setPassword(password);
-				
-				
-				Connection connection = connectionFactory.newConnection();  
-		        Channel channel = connection.createChannel();  
-				
-				
-		         channel.queueDeclare(exchangeName, false, false, false, null);  
-		         
-		         channel.basicPublish("", exchangeName, null, message.getBytes());  
-		         System.out.println(" [x] Sent '" + message + "'");  
-		   
-		         channel.close();  
-		         connection.close();  
-		         
-		         
-		         
-		         
-			} catch (Exception ne) {
-				ne.printStackTrace();
+			ConnectionFactory connectionFactory;
+
+
+
+
+			connectionFactory = new ConnectionFactory();
+			connectionFactory.setHost(host);
+			connectionFactory.setPort(port);
+			connectionFactory.setUsername(username);
+			connectionFactory.setPassword(password);
+			LOG.severe("Connect to server[host=" + host + ",port=" + port + ",username=" + username + ",password=" + password + ",exchange=" + exchangeName + "]");
+			try{
+				connection = connectionFactory.newConnection();  
+				channel = connection.createChannel();  
+				//Create fanout exchange
+				channel.exchangeDeclare(exchangeName,"fanout");
+				channel.queueDeclare(queueName, false, false, false, null);  
+			}catch(Exception e){
+				e.printStackTrace();
 			}
-
+			return channel;
 	    }
 	    
-	    public static void main(String[] argv){
-	    	AMQPUtil.connectionTest();
-	    }
+	    
+	    
 	}
 

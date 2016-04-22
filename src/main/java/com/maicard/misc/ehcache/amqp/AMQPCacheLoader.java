@@ -80,6 +80,7 @@ public class AMQPCacheLoader  implements CacheLoader {
 	     * @throws net.sf.jsr107cache.CacheException
 	     *
 	     */
+	    @Override
 	    public Object load(Object key) throws CacheException {
 	        return load(key, null);
 	    }
@@ -98,6 +99,7 @@ public class AMQPCacheLoader  implements CacheLoader {
 	     * @throws net.sf.jsr107cache.CacheException
 	     *
 	     */
+	    @Override
 	    public Object load(Object key, Object argument) throws CacheException {
 	        Serializable keyAsSerializable = (Serializable) key;
 	        Serializable effectiveLoaderArgument = effectiveLoaderArgument(argument);
@@ -184,7 +186,7 @@ public class AMQPCacheLoader  implements CacheLoader {
 	     * @return the name of this CacheLoader
 	     */
 	    public String getName() {
-	        return "JMSCacheLoader with default loaderArgument: " + defaultLoaderArgument;
+	        return "AMQPCacheLoader with default loaderArgument: " + defaultLoaderArgument;
 	    }
 
 	    public CacheLoader clone(Ehcache cache) throws CloneNotSupportedException {
@@ -193,7 +195,7 @@ public class AMQPCacheLoader  implements CacheLoader {
 
 
 	    public void init() {
-
+	    	LOG.fine("AMQPCacheLoader initialized.");
 	            
 	            status = Status.STATUS_ALIVE;
 	        
@@ -201,7 +203,8 @@ public class AMQPCacheLoader  implements CacheLoader {
 
 
 	    public void dispose() throws net.sf.ehcache.CacheException {
-	        
+	    	LOG.fine("AMQPCacheLoader is shutdown.");
+
 	        status = Status.STATUS_SHUTDOWN;
 	    }
 
@@ -209,6 +212,8 @@ public class AMQPCacheLoader  implements CacheLoader {
 	     * @return the status of the extension
 	     */
 	    public Status getStatus() {
+	    	LOG.fine("AMQPCacheLoader currrent status:" + status);
+
 	        return status;
 	    }
 

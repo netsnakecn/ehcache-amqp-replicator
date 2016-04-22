@@ -67,14 +67,21 @@ public class AMQPCacheManagerPeerProvider implements CacheManagerPeerProvider{
 
 	    /***/
 	    protected boolean listenToTopic;
+	    
+	    protected String queueName;
+	    
+	    protected String exchangeName;
+	    
 
 
 	    public AMQPCacheManagerPeerProvider(CacheManager cacheManager,
-	                                       Channel channel) {
+	                                       Channel channel, String queueName, String exchangeName) {
 
 
 	        this.cacheManager = cacheManager;
 	        this.channel = channel;
+	        this.queueName = queueName;
+	        this.exchangeName = exchangeName;
 	    }
 
 
@@ -104,9 +111,9 @@ public class AMQPCacheManagerPeerProvider implements CacheManagerPeerProvider{
 
 	    public void init() {
 
+	    	LOG.severe("AMQPCacheManagerPeerProvider initialized.");
 
-	        cachePeer = new AMQPCachePeer(cacheManager, channel);
-
+	        cachePeer = new  AMQPCachePeer(cacheManager, channel, queueName, exchangeName);
 	        remoteCachePeers.add(cachePeer);
 	       /* try {
 	            if (listenToTopic) {

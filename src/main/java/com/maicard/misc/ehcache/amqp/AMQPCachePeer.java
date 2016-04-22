@@ -8,11 +8,11 @@ import net.sf.ehcache.MimeTypeByteArray;
 import net.sf.ehcache.distribution.CachePeer;
 import net.sf.ehcache.util.CacheTransactionHelper;
 
-import static net.sf.ehcache.distribution.jms.JMSEventMessage.ACTION_PROPERTY;
-import static net.sf.ehcache.distribution.jms.JMSEventMessage.CACHE_NAME_PROPERTY;
-import static net.sf.ehcache.distribution.jms.JMSEventMessage.KEY_PROPERTY;
-import static net.sf.ehcache.distribution.jms.JMSUtil.CACHE_MANAGER_UID;
-
+import static com.maicard.misc.ehcache.amqp.AMQPUtil.ACTION_PROPERTY;
+import static com.maicard.misc.ehcache.amqp.AMQPUtil.CACHE_MANAGER_UID;
+import static com.maicard.misc.ehcache.amqp.AMQPUtil.CACHE_NAME_PROPERTY;
+import static com.maicard.misc.ehcache.amqp.AMQPUtil.KEY_PROPERTY;
+import static com.maicard.misc.ehcache.amqp.AMQPUtil.CONSUMBER_QUERY_INTERVAL;
 import javax.jms.BytesMessage;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -23,6 +23,7 @@ import javax.jms.QueueSession;
 import javax.jms.TextMessage;
 
 import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.QueueingConsumer;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -58,17 +59,15 @@ public class AMQPCachePeer implements CachePeer  {
 	 * Constructor
 	 */
 	public AMQPCachePeer(CacheManager cacheManager,
-			Channel channel) {
+			Channel channel, String queueName, String exchangeName) {
 
 
-		if (LOG.isLoggable(Level.FINEST)) {
-			LOG.finest("JMSCachePeer constructor ( cacheManager = "
-					+ cacheManager
-					+ ", channel = " + channel + " ) called");
-		}
+		LOG.fine("JMSCachePeer constructor ( cacheManager = "
+				+ cacheManager
+				+ ", channel = " + channel + " ) called");
 
-		this.cacheManager = cacheManager;
-		this.channel = channel;
+		AMQPConsumer amqpConsumer  = new AMQPConsumer(channel, queueName, exchangeName);
+		new Thread(amqpConsumer).start();
 	}
 
 
@@ -191,7 +190,7 @@ public class AMQPCachePeer implements CachePeer  {
 		if (LOG.isLoggable(Level.FINEST)) {
 			LOG.finest("send ( eventMessages = " + eventMessages + " ) called ");
 		}
-		
+
 	}
 
 
@@ -550,6 +549,42 @@ public class AMQPCachePeer implements CachePeer  {
 	}
 
 
+}
+
+class AMQPConsumer implements Runnable{
+	
+	Channel channel = null;
+	String queueName = null;
+	String exchangeName = null;
+	
+	
+	private static final Logger LOG = Logger.getLogger(AMQPCachePeer.class.getName());
+	
+	
+	public AMQPConsumer(Channel channel, String queueName, String exchangeName){
+		this.channel = channel;
+		this.queueName = queueName;
+		this.exchangeName = exchangeName;
+	}
+
+	@Override
+	public void run() {
+		LOG.fine("Begin AMQPCachePeer Consumer thread...");
+		try{
+			channel.queueBind(queueName, exchangeName, ""); // 绑定
+			QueueingConsumer consumer = new QueueingConsumer(channel);
+			channel.basicConsume(queueName, true, consumer);
+			while (true) {
+				QueueingConsumer.Delivery delivery = consumer.nextDelivery();
+				String m = new String(delivery.getBody());
+				LOG.fine("> [x] Received '" + m + "'");
+				Thread.sleep(CONSUMBER_QUERY_INTERVAL * 1000);
+			}
+		}catch(Exception e){
+			e.printStackTrace();
+		}		
+	}
+	
 }
 
 

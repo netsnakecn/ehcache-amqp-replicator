@@ -6,6 +6,7 @@ import static com.maicard.misc.ehcache.amqp.AMQPUtil.EXCHANGE_NAME;
 import static com.maicard.misc.ehcache.amqp.AMQPUtil.HOST;
 import static com.maicard.misc.ehcache.amqp.AMQPUtil.PASSWORD;
 import static com.maicard.misc.ehcache.amqp.AMQPUtil.PORT;
+import static com.maicard.misc.ehcache.amqp.AMQPUtil.QUEUE_NAME;
 import static com.maicard.misc.ehcache.amqp.AMQPUtil.USERNAME;
 import static com.maicard.misc.ehcache.amqp.AMQPUtil.TIMEOUT_MILLIS;
 import net.sf.ehcache.loader.CacheLoader;
@@ -16,8 +17,6 @@ import java.util.Properties;
 import java.util.logging.Logger;
 
 import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
 
 public class AMQPCacheLoaderFactory extends CacheLoaderFactory {
 
@@ -40,34 +39,16 @@ public class AMQPCacheLoaderFactory extends CacheLoaderFactory {
 	    	
 	    	String host = PropertyUtil.extractAndLogProperty(HOST, properties);
 			String port = PropertyUtil.extractAndLogProperty(PORT, properties);
-			String userName = PropertyUtil.extractAndLogProperty(USERNAME, properties);
+			String username = PropertyUtil.extractAndLogProperty(USERNAME, properties);
 			String password = PropertyUtil.extractAndLogProperty(PASSWORD, properties);
 			String timeoutMillis = PropertyUtil.extractAndLogProperty(TIMEOUT_MILLIS, properties);
 			//LOG.fine("Creating TopicSession in " + effectiveAcknowledgementMode.name() + " mode.");
 
 			String exchangeName = PropertyUtil.extractAndLogProperty(EXCHANGE_NAME, properties);
+			String queueName = PropertyUtil.extractAndLogProperty(QUEUE_NAME, properties);
 
-			Channel channel = null;
-			Connection  connection = null;
+			Channel channel= AMQPUtil.createChannel(host, Integer.parseInt(port), username, password, exchangeName, queueName);
 
-			ConnectionFactory connectionFactory;
-
-
-
-
-			connectionFactory = new ConnectionFactory();
-			connectionFactory.setHost(host);
-			connectionFactory.setPort(Integer.parseInt(port));
-			connectionFactory.setUsername(userName);
-			connectionFactory.setPassword(password);
-			LOG.severe("Connect to server[host=" + host + ",port=" + port + ",username=" + userName + ",password=" + password + ",queue=" + exchangeName + "]");
-			try{
-				connection = connectionFactory.newConnection();  
-				channel = connection.createChannel();  
-				channel.queueDeclare(exchangeName, false, false, false, null);  
-			}catch(Exception e){
-				e.printStackTrace();
-			}
 
 
 	       

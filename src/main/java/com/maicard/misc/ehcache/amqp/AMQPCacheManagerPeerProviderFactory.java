@@ -15,6 +15,7 @@ import static com.maicard.misc.ehcache.amqp.AMQPUtil.HOST;
 import static com.maicard.misc.ehcache.amqp.AMQPUtil.PASSWORD;
 import static com.maicard.misc.ehcache.amqp.AMQPUtil.PORT;
 import static com.maicard.misc.ehcache.amqp.AMQPUtil.USERNAME;
+import static com.maicard.misc.ehcache.amqp.AMQPUtil.QUEUE_NAME;
 
 import java.util.Properties;
 import java.util.logging.Logger;
@@ -34,10 +35,9 @@ public class AMQPCacheManagerPeerProviderFactory  extends CacheManagerPeerProvid
 	@Override
 	public CacheManagerPeerProvider createCachePeerProvider(CacheManager cacheManager, Properties properties) {
 
-		if (LOG.isLoggable(Level.FINEST)) {
-			LOG.finest("createCachePeerProvider ( cacheManager = " + cacheManager
-					+ ", properties = " + properties + " ) called ");
-		}
+		LOG.fine("createCachePeerProvider ( cacheManager = " + cacheManager
+				+ ", properties = " + properties + " ) called ");
+
 
 
 
@@ -45,35 +45,13 @@ public class AMQPCacheManagerPeerProviderFactory  extends CacheManagerPeerProvid
 
 		String host = PropertyUtil.extractAndLogProperty(HOST, properties);
 		String port = PropertyUtil.extractAndLogProperty(PORT, properties);
-		String userName = PropertyUtil.extractAndLogProperty(USERNAME, properties);
+		String username = PropertyUtil.extractAndLogProperty(USERNAME, properties);
 		String password = PropertyUtil.extractAndLogProperty(PASSWORD, properties);
-
-		//LOG.fine("Creating TopicSession in " + effectiveAcknowledgementMode.name() + " mode.");
-
 		String exchangeName = PropertyUtil.extractAndLogProperty(EXCHANGE_NAME, properties);
+		String queueName = PropertyUtil.extractAndLogProperty(QUEUE_NAME, properties);
 
-		Channel channel = null;
-		Connection  connection = null;
-
-		ConnectionFactory connectionFactory;
-
-
-
-
-		connectionFactory = new ConnectionFactory();
-		connectionFactory.setHost(host);
-		connectionFactory.setPort(Integer.parseInt(port));
-		connectionFactory.setUsername(userName);
-		connectionFactory.setPassword(password);
-		LOG.severe("Connect to server[host=" + host + ",port=" + port + ",username=" + userName + ",password=" + password + ",exchange=" + exchangeName + "]");
-		try{
-			connection = connectionFactory.newConnection();  
-			channel = connection.createChannel();  
-			channel.queueDeclare(exchangeName, false, false, false, null);  
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-		return new AMQPCacheManagerPeerProvider(cacheManager, channel);
+		Channel channel= AMQPUtil.createChannel(host, Integer.parseInt(port), username, password, exchangeName, queueName);
+		return new AMQPCacheManagerPeerProvider(cacheManager, channel, queueName, exchangeName);
 	}
 
 
